@@ -28,6 +28,8 @@ public:
     ~MeetingDialog();
     //设置会议信息
     void setMeetingInfo(int meetingId, bool isCreator);
+    //设置窗口标题显示用户名
+    void setUserName(const QString& name);
     //添加成员
     void addMember(int userId, QString userName);
     //获取音频播放对象

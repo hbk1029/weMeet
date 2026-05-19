@@ -17,6 +17,8 @@ Makefile.*
 opencv/
 AudioApi/speex/lib/
 AudioApi/speex/lib64/
+ffmpeg-4.2.2/lib/
+ffmpeg-4.2.2/bin/
 
 # IDE
 .vs/
@@ -30,8 +32,12 @@ config.ini
 # 日志
 *.log
 
+# Opus 预编译库
+AudioApi/opus/libopus.a
+
 # 临时文件
 *.bak
+object_script.*
 
 # 服务端编译产物
 WeMeetServer/build/

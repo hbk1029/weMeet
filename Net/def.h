@@ -259,7 +259,8 @@ typedef struct _STRU_MEETING_JOIN_RS {
     packType type;
     int meetingId;
     int result;
-    _STRU_MEETING_JOIN_RS() : type(_DEF_MEETING_JOIN_RS), meetingId(0), result(0) {
+    int isCreator; //服务器告知是否为会议主持人
+    _STRU_MEETING_JOIN_RS() : type(_DEF_MEETING_JOIN_RS), meetingId(0), result(0), isCreator(0) {
     }
 }_STRU_MEETING_JOIN_RS;
 
@@ -354,9 +355,10 @@ typedef struct _STRU_MEETING_VIDEO_RQ {
     int userId;
     int meetingId;
     int dataLen;
+    int codec;   // 0=JPEG, 1=H.264
     char data[32768];
     _STRU_MEETING_VIDEO_RQ() : type(_DEF_MEETING_VIDEO_RQ), userId(0),
-                               meetingId(0), dataLen(0) {
+                               meetingId(0), dataLen(0), codec(0) {
         memset(data, 0, sizeof(data));
     }
 }_STRU_MEETING_VIDEO_RQ;

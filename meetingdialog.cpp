@@ -11,6 +11,8 @@
 #include <QTextBlockFormat>
 #include <QTextCharFormat>
 #include <QTextDocument>
+#include <QComboBox>
+#include "VideoApi/h264_encoder.h"
 
 MeetingDialog::MeetingDialog(QWidget *parent)
     : QWidget(parent), ui(new Ui::MeetingDialog),
@@ -35,6 +37,29 @@ MeetingDialog::MeetingDialog(QWidget *parent)
         if (idx >= 0) ctrlLayout->insertWidget(idx + 1, m_pEndMeetingBtn);
     }
 
+    //萌拍下拉框（无/兔耳朵/帽子）
+    QComboBox* cbFunny = new QComboBox(ui->wdg_controlBar);
+    cbFunny->setCursor(Qt::PointingHandCursor);
+    cbFunny->addItem(QString::fromUtf8("无"));
+    cbFunny->addItem(QString::fromUtf8("兔耳朵"));
+    cbFunny->addItem(QString::fromUtf8("帽子"));
+    cbFunny->setStyleSheet(
+        "QComboBox { border: 1px solid #E5E6EB; border-radius: 8px; padding: 6px 12px;"
+        "  font-size: 14px; font-family: Microsoft YaHei; background: white; }"
+        "QComboBox:hover { border-color: #1677FF; }");
+    cbFunny->setCurrentIndex(0);
+    if (ctrlLayout) {
+        int idx = ctrlLayout->indexOf(ui->pb_camera);
+        if (idx >= 0) ctrlLayout->insertWidget(idx + 1, cbFunny);
+    }
+    connect(cbFunny, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            [this](int index) {
+        if (m_pVideoRead) {
+            m_pVideoRead->slot_setFunnyPic(index);
+            m_pVideoRead->slot_setFaceDetect(index != 0);
+        }
+    });
+
     //禁止 pb_send 被 Enter 键触发（避免和 le_input 的 returnPressed 重复）
     ui->pb_send->setAutoDefault(false);
 
@@ -49,6 +74,11 @@ MeetingDialog::MeetingDialog(QWidget *parent)
 MeetingDialog::~MeetingDialog()
 {
     delete ui;
+}
+
+void MeetingDialog::setUserName(const QString& name)
+{
+    setWindowTitle(QString::fromUtf8("会议 - %1").arg(name));
 }
 
 //设置会议信息
@@ -101,8 +131,15 @@ void MeetingDialog::setMeetingInfo(int meetingId, bool isCreator)
     m_pVideoWriteLocal->setVisible(false);
 
     connect(m_pVideoRead, &Video_Read::sig_videoFrame, this, &MeetingDialog::sig_videoFrame);
+#ifdef USE_H264
+    connect(m_pVideoRead, &Video_Read::sig_videoFrame,
+            m_pVideoWriteLocal, [this](const char* data, int len) {
+        m_pVideoWriteLocal->slot_recvVideoFrame(data, len, 1);
+    });
+#else
     connect(m_pVideoRead, &Video_Read::sig_videoFrame,
             m_pVideoWriteLocal, &Video_Write::slot_recvVideoFrame);
+#endif
 
     // wdg_videoArea 布局
     QHBoxLayout* videoLayout = ui->wdg_videoArea->findChild<QHBoxLayout*>();

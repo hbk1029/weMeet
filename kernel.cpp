@@ -2,6 +2,7 @@
 #include"./Net/def.h"
 #include"./Mediator/TCPClientMediator.h"
 #include"friendrequestlistdialog.h"
+#include"VideoApi/h264_encoder.h"
 #include<QSettings>
 #include<QApplication>
 #include<QFileInfo>
@@ -43,6 +44,7 @@ Kernel::Kernel(QObject *parent) :
             connect(m_pMeetingDlg, &MeetingDialog::sig_meetingEnd, this, &Kernel::slot_meetingEnd);
         }
         m_pMeetingDlg->setMeetingInfo(meetingId, isCreator);
+        m_pMeetingDlg->setUserName(m_name);
         m_pMeetingDlg->show();
     });
 
@@ -395,7 +397,7 @@ void Kernel::dealMeetingJoinRs(char* data, int len, long from) {
     if (rs->result == 0) {
         m_currentMeetingId = rs->meetingId;
         m_pFriendList->addMeetingHistory(QString::number(rs->meetingId));
-        Q_EMIT sig_showMeetingDialog(rs->meetingId, false);
+        Q_EMIT sig_showMeetingDialog(rs->meetingId, rs->isCreator != 0);
     } else if (rs->result == 1) {
         m_pFriendList->updateMeetingStatus(QString::number(rs->meetingId), false);
         QMessageBox::about(m_pFriendList, "提示", "会议不存在");
@@ -592,6 +594,12 @@ void Kernel::slot_meetingVideo(const char* data, int len)
     rq.userId = m_myId;
     rq.meetingId = m_currentMeetingId;
     rq.dataLen = len;
+#ifdef USE_H264
+    rq.codec = 1;
+#endif
+    static int sendCount = 0;
+    if (++sendCount <= 3 || sendCount % 30 == 0)
+        fprintf(stderr, "[SEND] video frame #%d dataLen=%d codec=%d\n", sendCount, len, rq.codec);
     if (len > (int)sizeof(rq.data)) return;
     if (data && len > 0) memcpy(rq.data, data, len);
     m_pMediator->sendData((char*)&rq, sizeof(rq), 0);
@@ -603,6 +611,9 @@ void Kernel::dealMeetingVideoNotify(char* data, int len, long from)
     Q_UNUSED(from);
     _STRU_MEETING_VIDEO_RQ* rq = (_STRU_MEETING_VIDEO_RQ*)data;
     if (!m_pMeetingDlg) return;
+    static int recvCount = 0;
+    if (++recvCount <= 3 || recvCount % 30 == 0)
+        fprintf(stderr, "[RECV] video frame #%d dataLen=%d codec=%d\n", recvCount, rq->dataLen, rq->codec);
     if (rq->dataLen == 0) {
         m_pMeetingDlg->clearRemoteVideo();
     } else if (m_pMeetingDlg->getVideoWrite()) {
@@ -624,11 +635,6 @@ void Kernel::dealDeleteFriendRs(char* data, int len, long from) {
             m_mapIdToFriendItem.erase(rs->friendId);
             delete item;
         }
-        QMessageBox::about(m_pFriendList, QString::fromUtf8("提示"),
-            QString::fromUtf8("删除好友成功"));
-    } else {
-        QMessageBox::about(m_pFriendList, QString::fromUtf8("提示"),
-            QString::fromUtf8("删除好友失败"));
     }
 }
 

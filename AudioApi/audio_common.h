@@ -1,7 +1,6 @@
 #ifndef AUDIO_COMMON_H
 #define AUDIO_COMMON_H
 
-//获取声音和播放声音的组件是 Qt 自带的 QAudioInput 和 QAudioOutput ,
 #include<QAudioInput>
 #include<QAudioOutput>
 #include<QAudioFormat>
@@ -9,12 +8,16 @@
 #include<QMessageBox>
 #include<qDebug>
 
-//使用speex
+// 注释此行回退到 Speex 8kHz
+#define USE_OPUS
+
+#ifdef USE_OPUS
+extern "C" {
+#include <opus/opus.h>
+}
+#else
 #include <speex/include/speex.h>
-
-#define USE_SPEEX 1
-
-//设置压缩质量
 #define SPEEX_QUALITY (8)
+#endif
 
 #endif // AUDIO_COMMON_H
