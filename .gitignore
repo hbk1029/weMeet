@@ -1,0 +1,42 @@
+# 编译产物
+release/
+debug/
+build/
+*.o
+*.obj
+*.exe
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+moc_predefs.h
+Makefile
+Makefile.*
+*.pro.user*
+
+# 依赖库（通过包管理器或源码安装）
+opencv/
+AudioApi/speex/lib/
+AudioApi/speex/lib64/
+
+# IDE
+.vs/
+*.swp
+*.swo
+*~
+
+# 配置文件
+config.ini
+
+# 日志
+*.log
+
+# 临时文件
+*.bak
+
+# 服务端编译产物
+WeMeetServer/build/
+WeMeetServer/*.o
+WeMeetServer/WeMeetServer
+WeMeetServer/nohup.out
+WeMeetServer/*.log
+WeMeetServer/*.pro.user*

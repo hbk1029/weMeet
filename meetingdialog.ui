@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MeetingDialog</class>
+ <widget class="QWidget" name="MeetingDialog">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>960</width><height>640</height></rect>
+  </property>
+  <property name="minimumSize">
+   <size><width>900</width><height>600</height></size>
+  </property>
+  <property name="windowTitle">
+   <string>视频会议</string>
+  </property>
+  <property name="styleSheet">
+   <string>QWidget#MeetingDialog { background: #F5F6FA; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="vl_main">
+   <property name="spacing"><number>0</number></property>
+   <property name="leftMargin"><number>0</number></property>
+   <property name="topMargin"><number>0</number></property>
+   <property name="rightMargin"><number>0</number></property>
+   <property name="bottomMargin"><number>0</number></property>
+   <item>
+    <widget class="QWidget" name="wdg_topBar">
+     <property name="minimumSize"><size><width>0</width><height>52</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>52</height></size></property>
+     <property name="styleSheet"><string>QWidget#wdg_topBar { background: white; border-bottom: 1px solid #E5E6EB; }</string></property>
+     <layout class="QHBoxLayout" name="hl_topBar">
+      <property name="leftMargin"><number>20</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>20</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <item>
+       <widget class="QLabel" name="lb_title">
+        <property name="text"><string>会议中</string></property>
+        <property name="styleSheet"><string>font-size: 16px; font-weight: bold; color: #333; font-family: Microsoft YaHei;</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lb_meetingIdPrefix">
+        <property name="text"><string>会议号:</string></property>
+        <property name="styleSheet"><string>font-size: 13px; color: #666; font-family: Microsoft YaHei; margin-left: 20px;</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lb_meetingId">
+        <property name="text"><string></string></property>
+        <property name="styleSheet"><string>font-size: 14px; font-weight: bold; color: #1677FF; font-family: Microsoft YaHei;</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_copy">
+        <property name="text"><string>复制</string></property>
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="styleSheet">
+         <string>QPushButton { color: #1677FF; border: 1px solid #1677FF; border-radius: 4px; padding: 4px 10px; font-size: 12px; font-family: Microsoft YaHei; background: transparent; }
+QPushButton:hover { background: #F0F5FF; }</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="hs_topBar">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="lb_timer">
+        <property name="text"><string>00:00</string></property>
+        <property name="styleSheet"><string>font-size: 14px; color: #666; font-family: Microsoft YaHei;</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="wdg_videoArea">
+     <property name="minimumSize">
+      <size><width>0</width><height>0</height></size>
+     </property>
+     <property name="maximumSize">
+      <size><width>16777215</width><height>240</height></size>
+     </property>
+     <property name="styleSheet">
+      <string>QWidget#wdg_videoArea { background: #1A1A2E; }</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSplitter" name="splitter_main">
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="handleWidth"><number>1</number></property>
+     <property name="styleSheet"><string>QSplitter::handle { background: #E5E6EB; }</string></property>
+     <widget class="QWidget" name="wdg_memberPanel">
+      <property name="minimumSize"><size><width>200</width><height>0</height></size></property>
+      <property name="maximumSize"><size><width>280</width><height>16777215</height></size></property>
+      <layout class="QVBoxLayout" name="vl_memberPanel">
+       <property name="leftMargin"><number>12</number></property>
+       <property name="topMargin"><number>12</number></property>
+       <property name="rightMargin"><number>12</number></property>
+       <property name="bottomMargin"><number>12</number></property>
+       <item>
+        <widget class="QLabel" name="lb_memberTitle">
+         <property name="text"><string>成员</string></property>
+         <property name="styleSheet"><string>font-size: 14px; font-weight: bold; color: #333; font-family: Microsoft YaHei; padding-bottom: 8px;</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="lw_memberList">
+         <property name="styleSheet">
+          <string>QListWidget { background: white; border-radius: 12px; border: none; padding: 8px; }
+QListWidget::item { padding: 6px 0; border: none; }</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="wdg_msgPanel">
+      <layout class="QVBoxLayout" name="vl_msgPanel">
+       <property name="leftMargin"><number>12</number></property>
+       <property name="topMargin"><number>12</number></property>
+       <property name="rightMargin"><number>12</number></property>
+       <property name="bottomMargin"><number>12</number></property>
+       <item>
+        <widget class="QTextBrowser" name="tb_messages">
+         <property name="styleSheet">
+          <string>QTextBrowser { background: white; border-radius: 12px; border: none; padding: 12px; font-size: 14px; font-family: Microsoft YaHei; color: #333; }</string>
+         </property>
+         <property name="openExternalLinks"><bool>false</bool></property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="wdg_inputBar">
+     <property name="minimumSize"><size><width>0</width><height>52</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>52</height></size></property>
+     <property name="styleSheet"><string>QWidget#wdg_inputBar { background: white; border-top: 1px solid #E5E6EB; }</string></property>
+     <layout class="QHBoxLayout" name="hl_inputBar">
+      <property name="leftMargin"><number>20</number></property>
+      <property name="topMargin"><number>8</number></property>
+      <property name="rightMargin"><number>20</number></property>
+      <property name="bottomMargin"><number>8</number></property>
+      <item>
+       <widget class="QLineEdit" name="le_input">
+        <property name="placeholderText"><string>输入消息...</string></property>
+        <property name="styleSheet">
+         <string>QLineEdit { border: 1px solid #E5E6EB; border-radius: 8px; padding: 0 16px; font-size: 14px; font-family: Microsoft YaHei; background: #F5F6FA; color: #333; }
+QLineEdit:focus { border-color: #1677FF; background: white; }</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_send">
+        <property name="text"><string>发送</string></property>
+        <property name="minimumSize"><size><width>72</width><height>36</height></size></property>
+        <property name="maximumSize"><size><width>72</width><height>36</height></size></property>
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="styleSheet">
+         <string>QPushButton { background: #1677FF; color: white; border-radius: 8px; font-size: 14px; font-family: Microsoft YaHei; border: none; }
+QPushButton:hover { background: #4096FF; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="wdg_controlBar">
+     <property name="minimumSize"><size><width>0</width><height>56</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>56</height></size></property>
+     <property name="styleSheet"><string>QWidget#wdg_controlBar { background: white; border-top: 1px solid #E5E6EB; }</string></property>
+     <layout class="QHBoxLayout" name="hl_controlBar">
+      <property name="leftMargin"><number>20</number></property>
+      <property name="topMargin"><number>10</number></property>
+      <property name="rightMargin"><number>20</number></property>
+      <property name="bottomMargin"><number>10</number></property>
+      <item>
+       <spacer name="hs_controlLeft">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_microphone">
+        <property name="text"><string>麦克风</string></property>
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="styleSheet">
+         <string>QPushButton { background: #F5F6FA; color: #666; border-radius: 8px; font-size: 13px; font-family: Microsoft YaHei; border: none; padding: 8px 24px; }
+QPushButton:hover { background: #E5E6EB; }</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_camera">
+        <property name="text"><string>摄像头</string></property>
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="styleSheet">
+         <string>QPushButton { background: #F5F6FA; color: #666; border-radius: 8px; font-size: 13px; font-family: Microsoft YaHei; border: none; padding: 8px 24px; }
+QPushButton:hover { background: #E5E6EB; }</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="hs_controlMid">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_exit">
+        <property name="text"><string>离开会议</string></property>
+        <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+        <property name="styleSheet">
+         <string>QPushButton { background: #E5E6EB; color: #666; border-radius: 8px; font-size: 14px; font-family: Microsoft YaHei; border: none; padding: 8px 28px; }
+QPushButton:hover { background: #D0D1D5; }</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="hs_controlRight">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

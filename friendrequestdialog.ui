@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FriendRequestDialog</class>
+ <widget class="QDialog" name="FriendRequestDialog">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>380</width><height>200</height></rect>
+  </property>
+  <property name="minimumSize">
+   <size><width>380</width><height>200</height></size>
+  </property>
+  <property name="windowTitle">
+   <string>好友请求</string>
+  </property>
+  <property name="styleSheet">
+   <string>QDialog#FriendRequestDialog { background: #F5F6FA; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="vl_main">
+   <property name="spacing"><number>16</number></property>
+   <property name="leftMargin"><number>32</number></property>
+   <property name="topMargin"><number>28</number></property>
+   <property name="rightMargin"><number>32</number></property>
+   <property name="bottomMargin"><number>24</number></property>
+   <item>
+    <widget class="QLabel" name="lb_title">
+     <property name="text"><string>好友请求</string></property>
+     <property name="styleSheet"><string>font-size: 16px; font-weight: bold; color: #333; font-family: Microsoft YaHei;</string></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="lb_msg">
+     <property name="text"><string>请求添加你为好友</string></property>
+     <property name="styleSheet"><string>font-size: 14px; color: #666; font-family: Microsoft YaHei;</string></property>
+     <property name="wordWrap"><bool>true</bool></property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="vs_spacer">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint"><size><width>20</width><height>20</height></size></property>
+    </spacer>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="hl_buttons">
+     <property name="spacing"><number>12</number></property>
+     <item>
+      <spacer name="hs_spacer">
+       <property name="orientation"><enum>Qt::Horizontal</enum></property>
+       <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_refuse">
+       <property name="text"><string>拒绝</string></property>
+       <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+       <property name="styleSheet">
+        <string>QPushButton { background: white; color: #666; border: 1px solid #E5E6EB; border-radius: 8px; font-size: 14px; font-family: Microsoft YaHei; padding: 8px 24px; }
+QPushButton:hover { border-color: #1677FF; color: #1677FF; }</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_accept">
+       <property name="text"><string>同意</string></property>
+       <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+       <property name="styleSheet">
+        <string>QPushButton { background: #1677FF; color: white; border-radius: 8px; font-size: 14px; font-family: Microsoft YaHei; border: none; padding: 8px 24px; }
+QPushButton:hover { background: #4096FF; }</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
