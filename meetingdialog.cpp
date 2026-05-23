@@ -1,5 +1,6 @@
 #include "meetingdialog.h"
 #include "ui_meetingdialog.h"
+#include "tracelog.h"
 #include <QClipboard>
 #include <QApplication>
 #include <QScrollBar>
@@ -27,6 +28,7 @@ MeetingDialog::MeetingDialog(QWidget *parent)
       m_pAudioRead(nullptr), m_pAudioWrite(nullptr),
 #endif
       m_pVideoRead(nullptr), m_pVideoWrite(nullptr), m_pVideoWriteLocal(nullptr),
+      m_pVideoDecoder(nullptr),
       m_isVideoOn(false), m_isMicMuted(false), m_pEndMeetingBtn(nullptr),
       m_pRecorder(nullptr), m_pRecordBtn(nullptr), m_pPlayer(nullptr), m_pPlayBtn(nullptr)
 {
@@ -198,6 +200,11 @@ void MeetingDialog::setMeetingInfo(int meetingId, bool isCreator)
         delete m_pVideoRead;
         m_pVideoRead = nullptr;
     }
+    // 释放旧的远端解码器
+    if (m_pVideoDecoder) {
+        delete m_pVideoDecoder;
+        m_pVideoDecoder = nullptr;
+    }
     if (m_pVideoWrite) {
         delete m_pVideoWrite;
         m_pVideoWrite = nullptr;
@@ -208,6 +215,8 @@ void MeetingDialog::setMeetingInfo(int meetingId, bool isCreator)
     }
     // 不传 parent：Video_Read 通过 moveToThread 移到 Worker 线程，有 parent 会导致 moveToThread 静默失败
     m_pVideoRead = new Video_Read(nullptr);
+    // 创建远端视频解码器（Worker 线程）
+    m_pVideoDecoder = new VideoDecoder(nullptr);  // 不传 parent，自有 Worker 线程
 #ifdef USE_OPENGL
     m_pVideoWrite = new OpenGLRender(ui->wdg_videoArea);
     m_pVideoWriteLocal = new OpenGLRender(ui->wdg_videoArea);
@@ -215,6 +224,13 @@ void MeetingDialog::setMeetingInfo(int meetingId, bool isCreator)
     m_pVideoWrite = new Video_Write(ui->wdg_videoArea);
     m_pVideoWriteLocal = new Video_Write(ui->wdg_videoArea);
 #endif
+    // VideoDecoder 解码完成 → 渲染组件显示
+    connect(m_pVideoDecoder, &VideoDecoder::sig_decodedImage, this,
+            [this](QImage img) {
+        if (m_pVideoWrite) {
+            m_pVideoWrite->slot_updateImage(img);
+        }
+    });
     m_isVideoOn = false;
     m_isMicMuted = true;
     ui->pb_microphone->setText(QString::fromUtf8("麦克风"));
@@ -275,7 +291,11 @@ void MeetingDialog::setMeetingInfo(int meetingId, bool isCreator)
 //添加成员
 void MeetingDialog::addMember(int userId, QString userName)
 {
-    if (m_mapUserIdToItem.count(userId) > 0) return;
+    TRACE("MEETING_UI addMember userId=%d name=%s count=%d", userId, userName.toStdString().c_str(), m_mapUserIdToItem.size());
+    if (m_mapUserIdToItem.count(userId) > 0) {
+        TRACE("MEETING_UI addMember skip duplicate userId=%d", userId);
+        return;
+    }
 
     QListWidgetItem* item = new QListWidgetItem(ui->lw_memberList);
     item->setSizeHint(QSize(0, 44));
@@ -337,6 +357,7 @@ void MeetingDialog::clearRemoteVideo()
 //添加系统消息
 void MeetingDialog::appendSystemMsg(QString msg)
 {
+    TRACE("MEETING_UI appendSystemMsg msg=%s", msg.toStdString().c_str());
     QTextCursor cursor = ui->tb_messages->textCursor();
     cursor.movePosition(QTextCursor::End);
 
@@ -368,7 +389,7 @@ void MeetingDialog::appendSystemMsg(QString msg)
 //添加聊天消息
 void MeetingDialog::appendChatMsg(int userId, QString userName, QString content)
 {
-    Q_UNUSED(userId);
+    TRACE("MEETING_UI appendChatMsg userId=%d name=%s content=%s", userId, userName.toStdString().c_str(), content.toStdString().c_str());
     QFile f(QString("C:\\temp\\chat_debug_%1.log").arg(QCoreApplication::applicationPid()));
     if (f.open(QIODevice::Append | QIODevice::Text)) {
         QTextStream s(&f);

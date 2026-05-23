@@ -3,18 +3,9 @@
 
 #include <QWidget>
 #include <QImage>
-#include <QPainter>
+#include <QMutex>
 
-#define USE_H264
-
-#ifdef USE_H264
-extern "C" {
-#include "libavcodec/avcodec.h"
-#include "libswscale/swscale.h"
-#include "libavutil/imgutils.h"
-}
-#endif
-
+// 纯渲染组件：通过 slot_updateImage 接收解码后的 QImage 并绘制
 class Video_Write : public QWidget
 {
     Q_OBJECT
@@ -23,23 +14,16 @@ public:
     ~Video_Write();
 
 public slots:
-    void slot_recvVideoFrame(const char* data, int len, int codec = -1);
-    void slot_clearFrame();
+    void slot_updateImage(QImage img);  // 接收解码后的图像
+    void slot_clearFrame();             // 清空画面
 
 protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
     QImage m_image;
-
-#ifdef USE_H264
-    bool initH264Decoder();
-    void releaseH264Decoder();
-
-    AVCodecContext* m_pDecCtx = nullptr;
-    AVFrame* m_pDecFrame = nullptr;
-    SwsContext* m_pSwsCtx = nullptr;
-#endif
+    QMutex m_mutex;
+    bool m_hasFrame;
 };
 
 #endif // VIDEO_WRITE_H

@@ -4,6 +4,7 @@
 #include"./Mediator/TCPClientMediator.h"
 #include"friendrequestlistdialog.h"
 #include"VideoApi/h264_encoder.h"
+#include"VideoApi/video_decoder.h"
 #include<QSettings>
 #include<QApplication>
 #include<QFileInfo>
@@ -400,8 +401,9 @@ void Kernel::dealMeetingJoinRs(char* data, int len, long from) {
 
 //处理新成员加入通知
 void Kernel::dealMeetingJoinNotify(char* data, int len, long from) {
-    qDebug()<<__func__;
+    Q_UNUSED(len); Q_UNUSED(from);
     _STRU_MEETING_JOIN_NOTIFY* notify = (_STRU_MEETING_JOIN_NOTIFY*)data;
+    TRACE("JOIN_NOTIFY userId=%d userName=%s dlg=%d", notify->userId, notify->userName, (m_pMeetingDlg!=nullptr));
     if (m_pMeetingDlg) {
         m_pMeetingDlg->addMember(notify->userId, notify->userName);
         m_pMeetingDlg->appendSystemMsg(QString("%1 加入了会议").arg(notify->userName));
@@ -428,8 +430,9 @@ void Kernel::dealMeetingExitNotify(char* data, int len, long from) {
 
 //处理会议聊天通知
 void Kernel::dealMeetingChatNotify(char* data, int len, long from) {
-    qDebug()<<__func__;
+    Q_UNUSED(len); Q_UNUSED(from);
     _STRU_MEETING_CHAT_NOTIFY* notify = (_STRU_MEETING_CHAT_NOTIFY*)data;
+    TRACE("CHAT_NOTIFY userId=%d userName=%s content=%s dlg=%d", notify->userId, notify->userName, notify->content, (m_pMeetingDlg!=nullptr));
     QFile f(QString("C:\\temp\\chat_debug_%1.log").arg(QCoreApplication::applicationPid()));
     if (f.open(QIODevice::Append | QIODevice::Text)) {
         QTextStream s(&f);
@@ -445,8 +448,9 @@ void Kernel::dealMeetingChatNotify(char* data, int len, long from) {
 
 //处理会议成员信息
 void Kernel::dealMeetingMemberInfo(char* data, int len, long from) {
-    qDebug()<<__func__;
+    Q_UNUSED(len); Q_UNUSED(from);
     _STRU_MEETING_MEMBER_INFO* info = (_STRU_MEETING_MEMBER_INFO*)data;
+    TRACE("MEMBER_INFO userId=%d userName=%s dlg=%d", info->userId, info->userName, (m_pMeetingDlg!=nullptr));
     if (m_pMeetingDlg) {
         m_pMeetingDlg->addMember(info->userId, info->userName);
     }
@@ -627,8 +631,14 @@ void Kernel::dealMeetingVideoNotify(char* data, int len, long from)
     if (rq->dataLen == 0) {
         TRACE("VIDEO_NOTIFY clear frame");
         m_pMeetingDlg->clearRemoteVideo();
-    } else if (m_pMeetingDlg->getVideoWrite()) {
-        m_pMeetingDlg->getVideoWrite()->slot_recvVideoFrame(rq->data, rq->dataLen);
+        return;
+    }
+    // 通过 VideoDecoder Worker 线程解码（跨线程调用）
+    VideoDecoder* decoder = m_pMeetingDlg->getVideoDecoder();
+    if (decoder) {
+        QByteArray packetData(rq->data, rq->dataLen);
+        QMetaObject::invokeMethod(decoder, "slot_decodePacket", Qt::QueuedConnection,
+                                  Q_ARG(QByteArray, packetData));
     }
 }
 

@@ -47,3 +47,5 @@ WeMeetServer/nohup.out
 WeMeetServer/*.log
 WeMeetServer/*.pro.user*
 .claude/
+.qmake.stash
+.clangd

@@ -9,12 +9,20 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 
+// 抑制 GCC 8.x + FFmpeg + OpenCV 的 SSE 内联函数 constexpr 声明冲突
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libswscale/swscale.h"
 }
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 class H264Encoder : public QObject
 {

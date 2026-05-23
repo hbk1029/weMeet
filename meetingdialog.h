@@ -18,6 +18,7 @@
 #include "AudioApi/sdl_audio_write.h"
 #include "AudioApi/opus_encoder.h"
 #include "VideoApi/opengl_render.h"
+#include "VideoApi/video_decoder.h"
 
 using namespace std;
 
@@ -52,6 +53,7 @@ public:
 #else
     Video_Write* getVideoWrite() { return m_pVideoWrite; }
 #endif
+    VideoDecoder* getVideoDecoder() { return m_pVideoDecoder; }
     //移除成员
     void removeMember(int userId);
     //清空远端视频
@@ -101,6 +103,7 @@ private:
     Audio_Write* m_pAudioWrite;
 #endif
     Video_Read*  m_pVideoRead;
+    VideoDecoder* m_pVideoDecoder;   // H.264 解码 Worker 线程
 #ifdef USE_OPENGL
     OpenGLRender* m_pVideoWrite;       // 对方画面
     OpenGLRender* m_pVideoWriteLocal;  // 本地画中画

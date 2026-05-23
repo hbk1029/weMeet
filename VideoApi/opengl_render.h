@@ -10,16 +10,6 @@
 #include <QImage>
 #include <QMutex>
 
-#define USE_H264
-
-#ifdef USE_H264
-extern "C" {
-#include "libavcodec/avcodec.h"
-#include "libswscale/swscale.h"
-#include "libavutil/imgutils.h"
-}
-#endif
-
 class OpenGLRender : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
@@ -28,9 +18,8 @@ public:
     ~OpenGLRender();
 
 public slots:
-    void slot_updateImage(QImage img);
-    void slot_clearFrame();
-    void slot_recvVideoFrame(const char* data, int len, int codec = -1);
+    void slot_updateImage(QImage img);  // 接收解码后的图像（来自 VideoDecoder）
+    void slot_clearFrame();             // 清空画面
 
 protected:
     void initializeGL() override;
@@ -41,15 +30,6 @@ private:
     QImage m_image;
     QMutex m_mutex;
     bool m_hasFrame;
-
-#ifdef USE_H264
-    bool initH264Decoder();
-    void releaseH264Decoder();
-
-    AVCodecContext* m_pDecCtx = nullptr;
-    AVFrame* m_pDecFrame = nullptr;
-    SwsContext* m_pSwsCtx = nullptr;
-#endif
 };
 
 #endif // USE_OPENGL

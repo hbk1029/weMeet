@@ -54,6 +54,7 @@ SOURCES += \
     AudioApi/wav_player.cpp \
     VideoApi/video_read.cpp \
     VideoApi/video_write.cpp \
+    VideoApi/video_decoder.cpp \
     VideoApi/opengl_render.cpp \
     VideoApi/h264_encoder.cpp \
     Mediator/INetMediator.cpp \
@@ -104,6 +105,7 @@ HEADERS += \
     AudioApi/wav_player.h \
     VideoApi/video_read.h \
     VideoApi/video_write.h \
+    VideoApi/video_decoder.h \
     VideoApi/opengl_render.h \
     VideoApi/h264_encoder.h
 
