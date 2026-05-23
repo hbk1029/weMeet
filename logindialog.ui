@@ -80,7 +80,9 @@
    </property>
    <property name="styleSheet">
     <string>QPushButton { background: #1677FF; color: white; border-radius: 8px; font-size: 14px; font-weight: bold; font-family: Microsoft YaHei; border: none; }
-QPushButton:hover { background: #4096FF; }</string>
+QPushButton:hover { background: #4096FF; }
+QPushButton[active=&quot;false&quot;] { background: transparent; color: #666; font-weight: normal; border: 1px solid #E5E6EB; }
+QPushButton[active=&quot;false&quot;]:hover { color: #1677FF; border-color: #1677FF; background: transparent; }</string>
    </property>
    <property name="text">
     <string>登录</string>
@@ -100,7 +102,9 @@ QPushButton:hover { background: #4096FF; }</string>
    </property>
    <property name="styleSheet">
     <string>QPushButton { background: transparent; color: #666; border-radius: 8px; font-size: 14px; font-family: Microsoft YaHei; border: 1px solid #E5E6EB; }
-QPushButton:hover { color: #1677FF; border-color: #1677FF; }</string>
+QPushButton:hover { color: #1677FF; border-color: #1677FF; }
+QPushButton[active=&quot;true&quot;] { background: #1677FF; color: white; font-weight: bold; border: none; }
+QPushButton[active=&quot;true&quot;]:hover { background: #4096FF; }</string>
    </property>
    <property name="text">
     <string>注册</string>

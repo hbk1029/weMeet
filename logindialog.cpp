@@ -2,6 +2,7 @@
 #include "ui_logindialog.h"
 #include <QMessageBox>
 #include <QDebug>
+#include <QStyle>
 
 LoginDialog::LoginDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::LoginDialog), m_isLoginMode(true)
@@ -17,16 +18,9 @@ LoginDialog::~LoginDialog()
 //设置标签按钮样式
 void LoginDialog::setTabButtonStyle(QPushButton* button, bool active)
 {
-    if (active) {
-        button->setStyleSheet(
-            "QPushButton { background: #1677FF; color: white; border-radius: 8px;"
-            "  font-size: 14px; font-weight: bold; font-family: Microsoft YaHei; border: none; }");
-    } else {
-        button->setStyleSheet(
-            "QPushButton { background: transparent; color: #666; border-radius: 8px;"
-            "  font-size: 14px; font-family: Microsoft YaHei; border: 1px solid #E5E6EB; }"
-            "QPushButton:hover { color: #1677FF; border-color: #1677FF; }");
-    }
+    button->setProperty("active", active ? "true" : "false");
+    button->style()->unpolish(button);
+    button->style()->polish(button);
 }
 
 //切换到登录

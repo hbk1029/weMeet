@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FriendRequestListDialog</class>
+ <widget class="QDialog" name="FriendRequestListDialog">
+  <property name="geometry"><rect><x>0</x><y>0</y><width>420</width><height>360</height></rect></property>
+  <property name="windowTitle"><string>好友请求</string></property>
+  <property name="styleSheet"><string>QDialog { background: #F5F6FA; font-family: Microsoft YaHei; }</string></property>
+  <layout class="QVBoxLayout" name="vl_main">
+   <property name="leftMargin"><number>16</number></property>
+   <property name="topMargin"><number>16</number></property>
+   <property name="rightMargin"><number>16</number></property>
+   <property name="bottomMargin"><number>16</number></property>
+   <item>
+    <widget class="QLabel" name="lb_title">
+     <property name="text"><string>待处理的好友请求</string></property>
+     <property name="styleSheet"><string>font-size: 18px; font-weight: bold; color: #333;</string></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="lw_requests">
+     <property name="styleSheet">
+      <string>QListWidget { background: transparent; border: none; }
+QListWidget::item { background: white; border-radius: 10px; margin: 0 0 8px 0; padding: 0; }</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pb_close">
+     <property name="text"><string>关闭</string></property>
+     <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+     <property name="minimumSize"><size><width>0</width><height>36</height></size></property>
+     <property name="maximumSize"><size><width>16777215</width><height>36</height></size></property>
+     <property name="styleSheet">
+      <string>QPushButton { background: #E5E6EB; color: #333; border-radius: 8px; font-size: 14px; border: none; }
+QPushButton:hover { background: #D3D4D9; }</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection><sender>pb_close</sender><signal>clicked()</signal><receiver>FriendRequestListDialog</receiver><slot>accept()</slot></connection>
+ </connections>
+</ui>

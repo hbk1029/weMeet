@@ -2,12 +2,9 @@
 #define AUDIO_READ_H
 
 #include <QObject>
-#include"audio_common.h"
-#include<QTimer>
-
-#ifdef USE_OPUS
+#include "audio_common.h"
+#include <QTimer>
 #include "opus_encoder.h"
-#endif
 
 class Audio_Read : public QObject
 {
@@ -29,12 +26,7 @@ private:
     QAudioInput*    m_pAudioIn;
     QIODevice*      m_pBufferIn;
     int             m_recordState;
-#ifdef USE_OPUS
     OpusEncoder*    m_pOpusEncoder;
-#else
-    SpeexBits       m_bitsEnc;
-    void*           m_pEncState;
-#endif
 };
 
 #endif // AUDIO_READ_H

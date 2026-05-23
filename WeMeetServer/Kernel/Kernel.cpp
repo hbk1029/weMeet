@@ -244,7 +244,7 @@ void Kernel::dealAddFriendRq(char* data, int len, int sockfd) {
         return;
     }
     //校验是否已经是好友(避免重复添加)
-    int target_id = stoi(lstStr.front());
+    int target_id = stoi(lstStr.front()); lstStr.pop_front();
     int target_status = stoi(lstStr.front());
     //不能添加自己
     if (target_id == rq->userId) {
@@ -286,6 +286,7 @@ void Kernel::dealAddFriendRq(char* data, int len, int sockfd) {
     memset(sql, 0, sizeof(sql));
     sprintf(sql, "select id from t_friend_requests where from_user_id = %d and to_user_id = %d and status = 0;",
             target_id, rq->userId);
+    lstStr.clear();  //清空 lstStr，防止上一次查询的残留数据
     if (!m_sql.SelectMysql(sql, 1, lstStr)) {
         cout << "查询数据库失败:" << sql << endl;
         return;
@@ -344,8 +345,7 @@ void Kernel::dealAddFriendRq(char* data, int len, int sockfd) {
             //查询请求记录的ID
             memset(sql, 0, sizeof(sql));
             sprintf(sql, "select id from t_friend_requests where from_user_id = %d and to_user_id = %d and status = 0;", rq->userId, target_id);
-            list<string> lstStr;
-    lstStr.clear();  //清空 lstStr，防止残留数据
+            lstStr.clear();  //清空 lstStr，防止残留数据
             if(!m_sql.SelectMysql(sql, 1, lstStr)) {
                 cout << "查询数据库失败:" << sql << endl;
                 return;

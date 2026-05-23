@@ -3,11 +3,7 @@
 Audio_Read::Audio_Read(QObject *parent) : QObject(parent),
     m_pTimer(nullptr), m_pAudioIn(nullptr), m_pBufferIn(nullptr)
 {
-#ifdef USE_OPUS
     m_format.setSampleRate(48000);
-#else
-    m_format.setSampleRate(8000);
-#endif
     m_format.setChannelCount(1);
     m_format.setSampleSize(16);
     m_format.setCodec("audio/pcm");
@@ -19,16 +15,9 @@ Audio_Read::Audio_Read(QObject *parent) : QObject(parent),
     }
     m_recordState = audio_state::_Stop;
 
-#ifdef USE_OPUS
     m_pOpusEncoder = new OpusEncoder(this);
     connect(m_pOpusEncoder, &OpusEncoder::sig_encodedData,
             this, &Audio_Read::sig_audioFrame);
-#else
-    speex_bits_init(&m_bitsEnc);
-    m_pEncState = speex_encoder_init(speex_lib_get_mode(SPEEX_MODEID_NB));
-    int tmp = SPEEX_QUALITY;
-    speex_encoder_ctl(m_pEncState, SPEEX_SET_QUALITY, &tmp);
-#endif
 }
 
 Audio_Read::~Audio_Read()
@@ -79,7 +68,6 @@ void Audio_Read::slot_pauseRecord()
 
 void Audio_Read::slot_readMore()
 {
-#ifdef USE_OPUS
     if (!m_pAudioIn || !m_pBufferIn)
         return;
 
@@ -90,49 +78,4 @@ void Audio_Read::slot_readMore()
     qint64 l = m_pBufferIn->read(m_buffer.data(), 1920);
     Q_UNUSED(l);
     m_pOpusEncoder->slot_encode(m_buffer.data(), 1920);
-#else
-    if (!m_pAudioIn || !m_pBufferIn)
-        return;
-
-    QByteArray m_buffer(2048,0);
-    qint64 len = m_pAudioIn->bytesReady();
-    if (len < 640)
-    {
-        return;
-    }
-    qint64 l = m_pBufferIn->read(m_buffer.data(), 640);
-
-    QByteArray frame;
-    char bytes[800] = {0};
-    int i = 0;
-    float input_frame1[320];
-    char* pInData = (char*)m_buffer.data();
-    char buf[800] = {0};
-    memcpy(buf, pInData, 640);
-
-    int nbytes = 0;
-    {
-        short num = 0;
-        for (i = 0;i < 160;i++)
-        {
-            num = (uint8_t)buf[2 * i] | (((uint8_t)buf[2 * i + 1]) << 8);
-            input_frame1[i] = num;
-        }
-        speex_bits_reset(&m_bitsEnc);
-        speex_encode(m_pEncState, input_frame1, &m_bitsEnc);
-        nbytes = speex_bits_write(&m_bitsEnc, bytes, 800);
-        frame.append(bytes, nbytes);
-        for (i = 0;i < 160;i++)
-        {
-            num = (uint8_t)buf[2 * i + 320] | (((uint8_t)buf[2 * i + 1 + 320]) << 8);
-            input_frame1[i] = num;
-        }
-        speex_bits_reset(&m_bitsEnc);
-        speex_encode(m_pEncState, input_frame1, &m_bitsEnc);
-        nbytes = speex_bits_write(&m_bitsEnc, bytes, 800);
-        frame.append(bytes, nbytes);
-    }
-
-    Q_EMIT sig_audioFrame(frame.data(), frame.size());
-#endif
 }

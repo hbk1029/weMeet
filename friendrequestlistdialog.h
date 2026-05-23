@@ -2,9 +2,10 @@
 #define FRIENDREQUESTLISTDIALOG_H
 
 #include <QDialog>
-#include <QListWidget>
 #include <QList>
 #include "./Net/def.h"
+
+namespace Ui { class FriendRequestListDialog; }
 
 class FriendRequestListDialog : public QDialog
 {
@@ -20,7 +21,7 @@ signals:
     void sig_refuseRequest(int requestId);
 
 private:
-    QListWidget* m_pListWidget;
+    Ui::FriendRequestListDialog* ui;
     QList<_STRU_FRIEND_REQUEST_ITEM> m_requests;
 };
 

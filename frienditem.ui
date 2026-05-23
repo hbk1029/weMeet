@@ -33,7 +33,8 @@
        <property name="maximumSize"><size><width>44</width><height>44</height></size></property>
        <property name="text"><string>?</string></property>
        <property name="alignment"><set>Qt::AlignCenter</set></property>
-       <property name="styleSheet"><string>background: #1677FF; color: white; border-radius: 22px; font-size: 18px; font-weight: bold; font-family: Microsoft YaHei;</string></property>
+       <property name="styleSheet"><string>QLabel#lb_avatar { background: #1677FF; color: white; border-radius: 22px; font-size: 18px; font-weight: bold; font-family: Microsoft YaHei; }
+QLabel#lb_avatar[status=&quot;offline&quot;] { background: #B0B0B0; }</string></property>
       </widget>
      </item>
      <item>

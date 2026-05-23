@@ -12,8 +12,6 @@ QT += multimedia opengl
 
 LIBS += -lWs2_32 \
     -lopengl32 \
-    $$PWD/AudioApi/speex/lib/libspeex.dll.a \
-    $$PWD/AudioApi/speex/lib/libogg.dll.a \
     $$PWD/AudioApi/opus/libopus.a -lssp
 
 INCLUDEPATH += $$PWD/AudioApi \
@@ -57,8 +55,6 @@ SOURCES += \
     VideoApi/video_read.cpp \
     VideoApi/video_write.cpp \
     VideoApi/opengl_render.cpp \
-    VideoApi/ffmpeg_decoder.cpp \
-    VideoApi/ffmpeg_player.cpp \
     VideoApi/h264_encoder.cpp \
     Mediator/INetMediator.cpp \
     Mediator/TCPClientMediator.cpp \
@@ -109,13 +105,12 @@ HEADERS += \
     VideoApi/video_read.h \
     VideoApi/video_write.h \
     VideoApi/opengl_render.h \
-    VideoApi/ffmpeg_decoder.h \
-    VideoApi/ffmpeg_player.h \
     VideoApi/h264_encoder.h
 
 FORMS += \
     addfrienddialog.ui \
     friendrequestdialog.ui \
+    friendrequestlistdialog.ui \
     frienditem.ui \
     friendlist.ui \
     logindialog.ui \

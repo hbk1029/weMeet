@@ -1,60 +1,36 @@
 #include "friendrequestlistdialog.h"
-#include <QVBoxLayout>
+#include "ui_friendrequestlistdialog.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 
 FriendRequestListDialog::FriendRequestListDialog(QWidget* parent)
-    : QDialog(parent), m_pListWidget(nullptr)
+    : QDialog(parent), ui(new Ui::FriendRequestListDialog)
 {
-    setWindowTitle(QString::fromUtf8("好友请求"));
+    ui->setupUi(this);
     setFixedSize(420, 360);
-    setStyleSheet(
-        "QDialog { background: #F5F6FA; font-family: Microsoft YaHei; }");
-
-    QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(16, 16, 16, 16);
-
-    QLabel* titleLabel = new QLabel(QString::fromUtf8("待处理的好友请求"), this);
-    titleLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #333;");
-    mainLayout->addWidget(titleLabel);
-
-    m_pListWidget = new QListWidget(this);
-    m_pListWidget->setStyleSheet(
-        "QListWidget { background: transparent; border: none; }"
-        "QListWidget::item { background: white; border-radius: 10px; margin: 0 0 8px 0; padding: 0; }");
-    mainLayout->addWidget(m_pListWidget);
-
-    QPushButton* closeBtn = new QPushButton(QString::fromUtf8("关闭"), this);
-    closeBtn->setCursor(Qt::PointingHandCursor);
-    closeBtn->setFixedHeight(36);
-    closeBtn->setStyleSheet(
-        "QPushButton { background: #E5E6EB; color: #333; border-radius: 8px; font-size: 14px; border: none; }"
-        "QPushButton:hover { background: #D3D4D9; }");
-    connect(closeBtn, &QPushButton::clicked, this, &QDialog::accept);
-    mainLayout->addWidget(closeBtn);
 }
 
 FriendRequestListDialog::~FriendRequestListDialog()
 {
+    delete ui;
 }
 
 void FriendRequestListDialog::setRequests(const QList<_STRU_FRIEND_REQUEST_ITEM>& requests)
 {
     m_requests = requests;
-    m_pListWidget->clear();
+    ui->lw_requests->clear();
 
     for (const auto& req : m_requests) {
         QListWidgetItem* item = new QListWidgetItem();
         item->setSizeHint(QSize(0, 64));
-        m_pListWidget->addItem(item);
+        ui->lw_requests->addItem(item);
 
         QWidget* w = new QWidget();
         QHBoxLayout* row = new QHBoxLayout(w);
         row->setContentsMargins(16, 10, 16, 10);
         row->setSpacing(12);
 
-        // 头像占位
         QLabel* avatar = new QLabel(QString(req.fromName).left(1));
         avatar->setFixedSize(40, 40);
         avatar->setAlignment(Qt::AlignCenter);
@@ -91,7 +67,7 @@ void FriendRequestListDialog::setRequests(const QList<_STRU_FRIEND_REQUEST_ITEM>
         row->addWidget(acceptBtn);
         row->addWidget(refuseBtn);
 
-        m_pListWidget->setItemWidget(item, w);
+        ui->lw_requests->setItemWidget(item, w);
 
         int requestId = req.requestId;
         int fromId = req.fromId;
@@ -99,10 +75,9 @@ void FriendRequestListDialog::setRequests(const QList<_STRU_FRIEND_REQUEST_ITEM>
 
         connect(acceptBtn, &QPushButton::clicked, this, [this, requestId, fromId, fromName]() {
             Q_EMIT sig_acceptRequest(requestId, fromId, fromName);
-            // 从列表中移除该条目
-            for (int i = 0; i < m_pListWidget->count(); ++i) {
-                QListWidgetItem* it = m_pListWidget->item(i);
-                QWidget* wdg = m_pListWidget->itemWidget(it);
+            for (int i = 0; i < ui->lw_requests->count(); ++i) {
+                QListWidgetItem* it = ui->lw_requests->item(i);
+                QWidget* wdg = ui->lw_requests->itemWidget(it);
                 if (wdg) {
                     QList<QPushButton*> btns = wdg->findChildren<QPushButton*>();
                     for (auto* btn : btns) btn->setEnabled(false);
@@ -113,9 +88,9 @@ void FriendRequestListDialog::setRequests(const QList<_STRU_FRIEND_REQUEST_ITEM>
 
         connect(refuseBtn, &QPushButton::clicked, this, [this, requestId]() {
             Q_EMIT sig_refuseRequest(requestId);
-            for (int i = 0; i < m_pListWidget->count(); ++i) {
-                QListWidgetItem* it = m_pListWidget->item(i);
-                QWidget* wdg = m_pListWidget->itemWidget(it);
+            for (int i = 0; i < ui->lw_requests->count(); ++i) {
+                QListWidgetItem* it = ui->lw_requests->item(i);
+                QWidget* wdg = ui->lw_requests->itemWidget(it);
                 if (wdg) {
                     QList<QPushButton*> btns = wdg->findChildren<QPushButton*>();
                     for (auto* btn : btns) btn->setEnabled(false);
