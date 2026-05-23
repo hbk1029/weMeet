@@ -5,6 +5,11 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QDateTime>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QCoreApplication>
+#include <QDir>
 
 FriendList::FriendList(QWidget *parent)
     : QWidget(parent), ui(new Ui::FriendList), m_iconId(8)
@@ -248,6 +253,7 @@ void FriendList::addMeetingHistory(QString meetingId)
     rec.isActive = true;
     m_meetingHistory.prepend(rec);
     if (m_meetingHistory.size() > 20) m_meetingHistory.removeLast();
+    saveMeetingHistory();
     rebuildHistoryList();
 }
 
@@ -256,6 +262,7 @@ void FriendList::updateMeetingStatus(QString meetingId, bool isActive)
     for (int i = 0; i < m_meetingHistory.size(); ++i) {
         if (m_meetingHistory[i].id == meetingId) {
             m_meetingHistory[i].isActive = isActive;
+            saveMeetingHistory();
             break;
         }
     }
@@ -264,7 +271,53 @@ void FriendList::updateMeetingStatus(QString meetingId, bool isActive)
 
 void FriendList::loadMeetingHistory()
 {
+    QString filePath = QCoreApplication::applicationDirPath() + "/records/meeting_history.json";
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return;  // 首次启动无历史文件，正常情况
+    }
+
+    QByteArray jsonData = file.readAll();
+    file.close();
+
+    QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+    if (!doc.isArray()) {
+        return;
+    }
+
+    m_meetingHistory.clear();
+    for (const QJsonValue& val : doc.array()) {
+        QJsonObject obj = val.toObject();
+        MeetingRecord rec;
+        rec.id = obj["id"].toString();
+        rec.timeStr = obj["timeStr"].toString();
+        rec.isActive = obj["isActive"].toBool(false);  // 文件中的记录默认视为已结束
+        m_meetingHistory.append(rec);
+    }
     rebuildHistoryList();
+}
+
+void FriendList::saveMeetingHistory()
+{
+    QString dirPath = QCoreApplication::applicationDirPath() + "/records/";
+    QDir().mkpath(dirPath);  // 确保目录存在
+
+    QJsonArray arr;
+    for (const auto& rec : m_meetingHistory) {
+        QJsonObject obj;
+        obj["id"] = rec.id;
+        obj["timeStr"] = rec.timeStr;
+        obj["isActive"] = rec.isActive;
+        arr.append(obj);
+    }
+
+    QJsonDocument doc(arr);
+    QString filePath = dirPath + "meeting_history.json";
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        file.write(doc.toJson());
+        file.close();
+    }
 }
 
 void FriendList::rebuildHistoryList()

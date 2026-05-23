@@ -34,12 +34,12 @@ void OpusEncoder::slot_encode(const char* pcmData, int len)
         return;
     }
 
-    unsigned char opusData[4096];
+    m_encodedBuffer.resize(4096);
     int nbBytes = opus_encode(m_pEncoder,
                                (const opus_int16*)pcmData,
                                960,
-                               opusData,
-                               sizeof(opusData));
+                               (unsigned char*)m_encodedBuffer.data(),
+                               m_encodedBuffer.size());
     if (nbBytes < 0) {
         qDebug() << "[OPUS_ENC] encode error:" << opus_strerror(nbBytes);
         return;
@@ -49,5 +49,5 @@ void OpusEncoder::slot_encode(const char* pcmData, int len)
     if (encCount <= 3 || encCount % 100 == 0)
         TRACE("OPUS_ENC #%d pcm=%dB -> opus=%dB thread=%lu", encCount, len, nbBytes, GetCurrentThreadId());
 
-    Q_EMIT sig_encodedData((const char*)opusData, nbBytes);
+    Q_EMIT sig_encodedData(m_encodedBuffer.left(nbBytes));  // left() 创建子集副本，防止悬空
 }

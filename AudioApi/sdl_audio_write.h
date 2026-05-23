@@ -12,6 +12,8 @@ extern "C" {
 #include <SDL.h>
 }
 
+class AudioDSP;
+
 #ifdef USE_SDL2
 
 class SDLAudioWrite : public QObject
@@ -20,6 +22,8 @@ class SDLAudioWrite : public QObject
 public:
     explicit SDLAudioWrite(QObject *parent = nullptr);
     ~SDLAudioWrite();
+
+    void setAudioDSP(AudioDSP* dsp) { m_pDSP = dsp; }
 
 public slots:
     void slot_openAudio();
@@ -31,6 +35,7 @@ private:
     static void audioCallback(void *userdata, Uint8 *stream, int len);
 
     SDL_AudioDeviceID m_dev;
+    AudioDSP* m_pDSP = nullptr;
     bool m_isOpen;
     bool m_isBuffered;  // 预缓冲完成标志，缓冲足够帧后才开始播放
     int m_preBufCount;  // 预缓冲帧计数

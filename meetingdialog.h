@@ -17,6 +17,7 @@
 #include "AudioApi/sdl_audio_read.h"
 #include "AudioApi/sdl_audio_write.h"
 #include "AudioApi/opus_encoder.h"
+#include "AudioApi/audio_dsp.h"
 #include "VideoApi/opengl_render.h"
 #include "VideoApi/video_decoder.h"
 
@@ -28,6 +29,7 @@ class MeetingDialog;
 
 class WavRecorder;
 class WavPlayer;
+class AudioDSP;
 
 class MeetingDialog : public QWidget
 {
@@ -120,6 +122,8 @@ private:
     // 回放
     WavPlayer* m_pPlayer;
     QPushButton* m_pPlayBtn;
+    // 音频 DSP（AEC + 降噪 + AGC）
+    AudioDSP* m_pAudioDSP;
 };
 
 #endif // MEETINGDIALOG_H

@@ -1,4 +1,5 @@
 #include "sdl_audio_write.h"
+#include "audio_dsp.h"
 #include "tracelog.h"
 
 #ifdef USE_SDL2
@@ -83,6 +84,10 @@ void SDLAudioWrite::audioCallback(void *userdata, Uint8 *stream, int len)
             if (mixLen > len) mixLen = len;
             SDL_MixAudioFormat(stream, (Uint8*)recvBuffer.data(), AUDIO_S16LSB,
                               mixLen, SDL_MIX_MAXVOLUME);
+            // 将实际播放的远端 PCM 喂给 AEC 作为回声参考
+            if (audio->m_pDSP && audio->m_pDSP->isInit()) {
+                audio->m_pDSP->processPlayback(reinterpret_cast<const spx_int16_t*>(recvBuffer.constData()));
+            }
         }
     }
     if (playCbCount <= 3 || playCbCount % 100 == 0)

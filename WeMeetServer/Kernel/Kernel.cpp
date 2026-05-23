@@ -705,6 +705,15 @@ void Kernel::dealMeetingJoinRq(char* data, int len, int sockfd) {
     }
 
     rs.result = 0;
+    // 检查加入者是否为会议主持人
+    {
+        char csql[256] = "";
+        sprintf(csql, "select creator_id from t_meeting where meeting_code = %d;", rq->meetingId);
+        list<string> clst;
+        if (m_sql.SelectMysql(csql, 1, clst) && !clst.empty()) {
+            rs.isCreator = (stoi(clst.front()) == rq->userId);
+        }
+    }
     m_pMediator->sendData((char*)&rs, sizeof(rs), sockfd);
 
     memset(sql, 0, sizeof(sql));

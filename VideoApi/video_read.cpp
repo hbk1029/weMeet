@@ -72,26 +72,51 @@ void Video_Read::slot_getVideoFrame()
     }
 
 #ifdef USE_H264
-    // H.264 编码：缩放 BGR 帧 → 编码器 → 发射
+    // H.264 编码：缩放 BGR 帧 → 萌拍 → 编码器 → 发射
     cv::Mat frameScaled;
     cv::resize(frame, frameScaled, cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT));
-    // PTS 时间戳（微秒）
-    if (m_frameCount == 0) {
-        m_elapsed.start();
-    }
-    int64_t pts = m_elapsed.nsecsElapsed() / 1000;  // 纳秒 → 微秒
-    m_pH264Encoder->setPts(pts);
-    m_frameCount++;
-    m_pH264Encoder->slot_encode(frameScaled);
 
-    // 本地预览: BGR→RGB→QImage, 绕过 H.264 避免色度丢失
+    // 转为 QImage 用于萌拍叠加和本地预览
     cv::Mat frameRGB;
     cv::cvtColor(frameScaled, frameRGB, cv::COLOR_BGR2RGB);
     QImage localImg(frameRGB.data, frameRGB.cols, frameRGB.rows,
                     frameRGB.step, QImage::Format_RGB888);
+    localImg = localImg.copy();  // 深拷贝，断开 cv::Mat 共享内存
+
+    // 萌拍：在人脸位置画道具（QPainter 叠加到 QImage 上）
+    if (m_isFaceDetect && m_funnyPic != fp_none && !m_vecLastFace.empty()) {
+        QImage* tmpImg = nullptr;
+        switch (m_funnyPic) {
+        case fp_tuer: tmpImg = &m_tuer; break;
+        case fp_hat:  tmpImg = &m_hat;  break;
+        }
+        if (tmpImg && !tmpImg->isNull()) {
+            QPainter paint(&localImg);
+            for (size_t i = 0; i < m_vecLastFace.size(); ++i) {
+                cv::Rect rct = m_vecLastFace[i];
+                int x = rct.x + rct.width * 0.5 - tmpImg->width() * 0.5 + 20;
+                int y = rct.y - tmpImg->height();
+                paint.drawImage(QPoint(x, y), *tmpImg);
+            }
+        }
+    }
+
+    // 本地预览：直接发射带萌拍的 QImage，绕过 H.264 色度丢失
     if (m_frameCount <= 3 || m_frameCount % 30 == 0)
         TRACE("VIDEO_CAP frame=%d thread=%lu", m_frameCount, GetCurrentThreadId());
-    Q_EMIT sig_localPreviewFrame(localImg.copy());
+    Q_EMIT sig_localPreviewFrame(localImg);
+
+    // 将带萌拍的 QImage 转回 cv::Mat 送入 H.264 编码器
+    // 确保连续内存，避免 QImage 行对齐导致的问题
+    QImage rgbCopy = localImg.convertToFormat(QImage::Format_RGB888);
+    cv::Mat matRgb(rgbCopy.height(), rgbCopy.width(), CV_8UC3,
+                   rgbCopy.bits(), rgbCopy.bytesPerLine());
+    cv::Mat frameBGR = matRgb.clone();  // 深拷贝脱离 QImage 内存
+    cv::cvtColor(frameBGR, frameBGR, cv::COLOR_RGB2BGR);
+    // PTS 使用帧序号，配合编码器 time_base={1,FRAME_RATE} 即每帧递增1
+    m_pH264Encoder->setPts(m_frameCount);
+    m_frameCount++;
+    m_pH264Encoder->slot_encode(frameBGR);
 
 #else
     // BGR → RGB

@@ -30,7 +30,8 @@ MeetingDialog::MeetingDialog(QWidget *parent)
       m_pVideoRead(nullptr), m_pVideoWrite(nullptr), m_pVideoWriteLocal(nullptr),
       m_pVideoDecoder(nullptr),
       m_isVideoOn(false), m_isMicMuted(false), m_pEndMeetingBtn(nullptr),
-      m_pRecorder(nullptr), m_pRecordBtn(nullptr), m_pPlayer(nullptr), m_pPlayBtn(nullptr)
+      m_pRecorder(nullptr), m_pRecordBtn(nullptr), m_pPlayer(nullptr), m_pPlayBtn(nullptr),
+      m_pAudioDSP(nullptr)
 {
     ui->setupUi(this);
     // 创建结束会议按钮（仅主持人可见）
@@ -152,6 +153,19 @@ void MeetingDialog::setMeetingInfo(int meetingId, bool isCreator)
     m_pSDLAudioWrite = new SDLAudioWrite(this);
     m_pSDLAudioWrite->slot_openAudio();  // 播放设备始终打开，随时准备接收远端音频
     m_pOpusEncoder = new OpusEncoder(this);
+
+    // 创建音频 DSP（AEC 回声消除 + 降噪 + AGC）
+    if (m_pAudioDSP) { delete m_pAudioDSP; m_pAudioDSP = nullptr; }
+    m_pAudioDSP = new AudioDSP(this);
+    if (m_pAudioDSP->init(48000, 960)) {
+        m_pSDLAudioRead->setAudioDSP(m_pAudioDSP);
+        m_pSDLAudioWrite->setAudioDSP(m_pAudioDSP);
+        qDebug() << "[MEETING] AudioDSP 已启用: AEC + 降噪 + AGC";
+    } else {
+        qWarning() << "[MEETING] AudioDSP 初始化失败，回退到原始音频";
+        delete m_pAudioDSP;
+        m_pAudioDSP = nullptr;
+    }
     // 原始 PCM → WAV 录制（录制需要原始PCM，非编码后数据）
     connect(m_pSDLAudioRead, &SDLAudioRead::SIG_sendAudioFrame, this,
             [this](QByteArray data) {
@@ -165,11 +179,11 @@ void MeetingDialog::setMeetingInfo(int meetingId, bool isCreator)
         m_pOpusEncoder->slot_encode(data.data(), data.size());
     });
     connect(m_pOpusEncoder, &OpusEncoder::sig_encodedData, this,
-            [this](const char* data, int len) {
+            [this](const QByteArray& data) {
         static int sigCount = 0;
         if (++sigCount <= 3 || sigCount % 100 == 0)
-            qDebug() << "[AUDIO_SEND] sig_meetingAudio frame#" << sigCount << " len=" << len;
-        Q_EMIT sig_meetingAudio(data, len);
+            qDebug() << "[AUDIO_SEND] sig_meetingAudio frame#" << sigCount << " len=" << data.size();
+        Q_EMIT sig_meetingAudio(data.constData(), data.size());
     });
 #else
     if (m_pAudioRead) {

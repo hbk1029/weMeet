@@ -12,11 +12,13 @@ QT += multimedia opengl
 
 LIBS += -lWs2_32 \
     -lopengl32 \
-    $$PWD/AudioApi/opus/libopus.a -lssp
+    $$PWD/AudioApi/opus/libopus.a \
+    $$PWD/AudioApi/speex/lib/libspeexdsp.dll.a -lssp
 
 INCLUDEPATH += $$PWD/AudioApi \
     $$PWD/AudioApi/opus \
-    $$PWD/AudioApi/vad
+    $$PWD/AudioApi/vad \
+    $$PWD/AudioApi/speex/include
 INCLUDEPATH += $$PWD/VideoApi \
     $$PWD/opencv/include \
     $$PWD/ffmpeg-4.2.2/include \
@@ -52,6 +54,7 @@ SOURCES += \
     AudioApi/vad_wrapper.cpp \
     AudioApi/wav_recorder.cpp \
     AudioApi/wav_player.cpp \
+    AudioApi/audio_dsp.cpp \
     VideoApi/video_read.cpp \
     VideoApi/video_write.cpp \
     VideoApi/video_decoder.cpp \
@@ -103,6 +106,7 @@ HEADERS += \
     AudioApi/vad_wrapper.h \
     AudioApi/wav_recorder.h \
     AudioApi/wav_player.h \
+    AudioApi/audio_dsp.h \
     VideoApi/video_read.h \
     VideoApi/video_write.h \
     VideoApi/video_decoder.h \

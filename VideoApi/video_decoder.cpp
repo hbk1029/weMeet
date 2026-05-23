@@ -70,12 +70,12 @@ void VideoDecoder::processQueue()
     if (data.size() <= 2) return;
 
     // --- H.264 解码 ---
-    AVPacket packet;
-    av_init_packet(&packet);
-    packet.data = (uint8_t*)data.constData();
-    packet.size = data.size();
+    AVPacket* pkt = av_packet_alloc();
+    pkt->data = (uint8_t*)data.constData();
+    pkt->size = data.size();
 
-    int ret = avcodec_send_packet(m_pDecCtx, &packet);
+    int ret = avcodec_send_packet(m_pDecCtx, pkt);
+    av_packet_free(&pkt);
     if (ret < 0) {
         static int errCount = 0;
         if (++errCount <= 3)
@@ -132,8 +132,6 @@ void VideoDecoder::processQueue()
 
 bool VideoDecoder::initH264Decoder()
 {
-    avcodec_register_all();
-
     AVCodec* pCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
     if (!pCodec) {
         qDebug() << "[VideoDecoder] H.264 解码器未找到";
@@ -174,8 +172,7 @@ void VideoDecoder::releaseH264Decoder()
         m_pDecFrame = nullptr;
     }
     if (m_pDecCtx) {
-        avcodec_close(m_pDecCtx);
-        avcodec_free_context(&m_pDecCtx);
+        avcodec_free_context(&m_pDecCtx);  // avcodec_free_context 内部已调用 avcodec_close
         m_pDecCtx = nullptr;
     }
     m_isDecoderReady = false;

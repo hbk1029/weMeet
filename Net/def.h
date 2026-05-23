@@ -23,7 +23,7 @@
 #define _DEF_VERSION_LOW            (2)
 #define _DEF_VERSION_HIGH           (2)
 //服务器IP
-#define _DEF_SERVER_IP              ("192.168.74.136")
+#define _DEF_SERVER_IP              ("192.168.74.135")
 //服务器端口号
 #define _DEF_SERVER_PORT            (8080)
 //TCP协议监听队列的最大长度

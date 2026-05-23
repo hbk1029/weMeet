@@ -32,6 +32,7 @@ public:
     void addMeetingHistory(QString meetingId);
     void updateMeetingStatus(QString meetingId, bool isActive);
     void loadMeetingHistory();
+    void saveMeetingHistory();         // 持久化到 JSON 文件
     void updateFriendRequestBadge(int count);
 
 signals:

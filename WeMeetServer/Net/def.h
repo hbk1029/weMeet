@@ -260,7 +260,8 @@ typedef struct _STRU_MEETING_JOIN_RS {
     packType type;
     int meetingId;
     int result;
-    _STRU_MEETING_JOIN_RS() : type(_DEF_MEETING_JOIN_RS), meetingId(0), result(0) {
+    int isCreator; // 告知客户端是否为会议主持人
+    _STRU_MEETING_JOIN_RS() : type(_DEF_MEETING_JOIN_RS), meetingId(0), result(0), isCreator(0) {
     }
 }_STRU_MEETING_JOIN_RS;
 

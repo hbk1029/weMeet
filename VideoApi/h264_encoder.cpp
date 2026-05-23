@@ -1,4 +1,5 @@
 #include "h264_encoder.h"
+#include "common.h"
 
 #ifdef USE_H264
 
@@ -40,7 +41,7 @@ H264Encoder::H264Encoder(int width, int height, QObject *parent)
     m_pCodecCtx->bit_rate = 400000;
     m_pCodecCtx->width = m_width;
     m_pCodecCtx->height = m_height;
-    m_pCodecCtx->time_base = (AVRational){1, 15};
+    m_pCodecCtx->time_base = (AVRational){1, FRAME_RATE};  // 与摄像头采集帧率对齐
     m_pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
     m_pCodecCtx->gop_size = 12;
     m_pCodecCtx->max_b_frames = 0;

@@ -1,4 +1,5 @@
 #include "sdl_audio_read.h"
+#include "audio_dsp.h"
 #include "tracelog.h"
 #ifdef USE_VAD
 #include "vad_wrapper.h"
@@ -65,6 +66,11 @@ void SDLAudioRead::audioCallback(void *userdata, Uint8 *stream, int len)
     static int cbCount = 0, vadPass = 0, vadSkip = 0;
     cbCount++;
     if (cbCount <= 3) TRACE("AUDIO_CAP cb #%d len=%d thread=%lu", cbCount, len, GetCurrentThreadId());
+
+    // DSP 处理：AEC 回声消除 + 降噪 + AGC（原地修改 PCM）
+    if (audio->m_pDSP && audio->m_pDSP->isInit()) {
+        audio->m_pDSP->processCapture(reinterpret_cast<spx_int16_t*>(stream));
+    }
 
 #ifdef USE_VAD
     // VAD 检测：静音帧不发送

@@ -10,6 +10,7 @@ extern "C" {
 }
 
 class VadWrapper;
+class AudioDSP;
 
 #ifdef USE_SDL2
 
@@ -19,6 +20,8 @@ class SDLAudioRead : public QObject
 public:
     explicit SDLAudioRead(QObject *parent = nullptr);
     ~SDLAudioRead();
+
+    void setAudioDSP(AudioDSP* dsp) { m_pDSP = dsp; }
 
 signals:
     void SIG_sendAudioFrame(QByteArray data);
@@ -31,6 +34,7 @@ private:
     static void audioCallback(void *userdata, Uint8 *stream, int len);
 
     SDL_AudioDeviceID m_dev;
+    AudioDSP* m_pDSP = nullptr;
     bool m_isOpen;
 #ifdef USE_VAD
     VadWrapper* m_pVad;

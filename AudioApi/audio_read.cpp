@@ -17,7 +17,9 @@ Audio_Read::Audio_Read(QObject *parent) : QObject(parent),
 
     m_pOpusEncoder = new OpusEncoder(this);
     connect(m_pOpusEncoder, &OpusEncoder::sig_encodedData,
-            this, &Audio_Read::sig_audioFrame);
+            this, [this](const QByteArray& data) {
+        Q_EMIT sig_audioFrame(data.constData(), data.size());
+    });
 }
 
 Audio_Read::~Audio_Read()
