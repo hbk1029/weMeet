@@ -8,20 +8,24 @@ CONFIG += c++11 console
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-QT += multimedia
+QT += multimedia opengl
 
 LIBS += -lWs2_32 \
+    -lopengl32 \
     $$PWD/AudioApi/speex/lib/libspeex.dll.a \
     $$PWD/AudioApi/speex/lib/libogg.dll.a \
     $$PWD/AudioApi/opus/libopus.a -lssp
 
 INCLUDEPATH += $$PWD/AudioApi \
-    $$PWD/AudioApi/opus
+    $$PWD/AudioApi/opus \
+    $$PWD/AudioApi/vad
 INCLUDEPATH += $$PWD/VideoApi \
     $$PWD/opencv/include \
-    $$PWD/ffmpeg-4.2.2/include
+    $$PWD/ffmpeg-4.2.2/include \
+    $$PWD/SDL2-2.0.10/include
 
-LIBS += $$PWD/opencv/lib/libopencv_core420.dll.a \
+LIBS += $$PWD/SDL2-2.0.10/lib/x86/SDL2.lib \
+    $$PWD/opencv/lib/libopencv_core420.dll.a \
     $$PWD/opencv/lib/libopencv_imgproc420.dll.a \
     $$PWD/opencv/lib/libopencv_imgcodecs420.dll.a \
     $$PWD/opencv/lib/libopencv_highgui420.dll.a \
@@ -40,12 +44,19 @@ LIBS += $$PWD/opencv/lib/libopencv_core420.dll.a \
     $$PWD/ffmpeg-4.2.2/lib/libswscale.dll.a
 
 SOURCES += \
+    tracelog.cpp \
     AudioApi/audio_read.cpp \
     AudioApi/audio_write.cpp \
+    AudioApi/sdl_audio_read.cpp \
+    AudioApi/sdl_audio_write.cpp \
     AudioApi/opus_encoder.cpp \
     AudioApi/opus_decoder.cpp \
+    AudioApi/vad_wrapper.cpp \
+    AudioApi/wav_recorder.cpp \
+    AudioApi/wav_player.cpp \
     VideoApi/video_read.cpp \
     VideoApi/video_write.cpp \
+    VideoApi/opengl_render.cpp \
     VideoApi/ffmpeg_decoder.cpp \
     VideoApi/ffmpeg_player.cpp \
     VideoApi/h264_encoder.cpp \
@@ -61,9 +72,16 @@ SOURCES += \
     kernel.cpp \
     main.cpp \
     logindialog.cpp \
-    meetingdialog.cpp
+    meetingdialog.cpp \
+    AudioApi/vad/webrtc_vad.c \
+    AudioApi/vad/vad_core.c \
+    AudioApi/vad/vad_filterbank.c \
+    AudioApi/vad/vad_gmm.c \
+    AudioApi/vad/vad_sp.c \
+    AudioApi/vad/spl_stubs.c
 
 HEADERS += \
+    tracelog.h \
     Mediator/INetMediator.h \
     Mediator/TCPClientMediator.h \
     Net/INet.h \
@@ -81,10 +99,16 @@ HEADERS += \
     meetingdialog.h \
     AudioApi/audio_read.h \
     AudioApi/audio_write.h \
+    AudioApi/sdl_audio_read.h \
+    AudioApi/sdl_audio_write.h \
     AudioApi/opus_encoder.h \
     AudioApi/opus_decoder.h \
+    AudioApi/vad_wrapper.h \
+    AudioApi/wav_recorder.h \
+    AudioApi/wav_player.h \
     VideoApi/video_read.h \
     VideoApi/video_write.h \
+    VideoApi/opengl_render.h \
     VideoApi/ffmpeg_decoder.h \
     VideoApi/ffmpeg_player.h \
     VideoApi/h264_encoder.h

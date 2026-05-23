@@ -7,6 +7,7 @@
 
 #include <QObject>
 #include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 
 extern "C" {
 #include "libavcodec/avcodec.h"
@@ -25,6 +26,9 @@ public:
 signals:
     void sig_encodedPacket(const char* data, int len);
 
+public:
+    void setPts(int64_t pts);
+
 public slots:
     void slot_encode(const cv::Mat& bgrFrame);
 
@@ -35,6 +39,7 @@ private:
     SwsContext* m_pSwsCtx;
     int m_width;
     int m_height;
+    int64_t m_pts;
 };
 
 #endif // USE_H264

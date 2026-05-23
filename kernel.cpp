@@ -1,4 +1,5 @@
 ﻿#include "kernel.h"
+#include "tracelog.h"
 #include"./Net/def.h"
 #include"./Mediator/TCPClientMediator.h"
 #include"friendrequestlistdialog.h"
@@ -309,29 +310,19 @@ void Kernel::slot_closeProcess() {
 
 void Kernel::slot_dealData(char *data, int len, long from)
 {
-    qDebug()<<__func__;
     packType type = *(int*)data;
+    // 仅对高频类型（音频/视频）抽样记录，避免日志爆炸
+    static int dispCount = 0; dispCount++;
+    bool isAV = (type == _DEF_MEETING_AUDIO_RQ || type == _DEF_MEETING_VIDEO_RQ);
+    if (!isAV || dispCount <= 3 || dispCount % 100 == 0)
+        TRACE("DISPATCH #%d type=%d len=%d isAV=%d", dispCount, type, len, isAV);
+
     int index = type - _DEF_PROTOCOL_BASE - 1;
     if(index >= 0 && index < _DEF_PROTOCOL_COUNT){
         PFUN pf = m_protocol[index];
         if(pf){
-            if (type == _DEF_MEETING_CHAT_NOTIFY) {
-                QFile f(QString("C:\\temp\\chat_debug_%1.log").arg(QCoreApplication::applicationPid()));
-                if (f.open(QIODevice::Append | QIODevice::Text)) {
-                    QTextStream s(&f);
-                    s << QDateTime::currentDateTime().toString("hh:mm:ss.zzz")
-                      << " DISPATCH type=" << type << " index=" << index << "\n";
-                    f.close();
-                }
-            }
             (this->*pf)(data, len, from);
         }
-        else{
-            qDebug()<<"type2:"<<type;
-        }
-    }
-    else{
-        qDebug()<<"type1:"<<type;
     }
 }
 
@@ -565,31 +556,50 @@ void Kernel::slot_meetingChat(QString content) {
 
 //发送会议音频
 void Kernel::slot_meetingAudio(const char* data, int len) {
-    //qDebug()<<__func__;
-    if (m_currentMeetingId == 0 || !data || len <= 0) return;
+    static int sendCount = 0; sendCount++;
+    if (sendCount <= 3 || sendCount % 100 == 0)
+        TRACE("AUDIO_SEND #%d len=%d meetingId=%d", sendCount, len, m_currentMeetingId);
+    if (m_currentMeetingId == 0 || !data || len <= 0) {
+        static int skipCount = 0;
+        if (++skipCount <= 3)
+            TRACE("AUDIO_SEND skip #%d meetingId=%d data=%d len=%d", skipCount, m_currentMeetingId, (data!=nullptr), len);
+        return;
+    }
     _STRU_MEETING_AUDIO_RQ rq;
     rq.userId = m_myId;
     rq.meetingId = m_currentMeetingId;
     rq.dataLen = len;
-    if (len > (int)sizeof(rq.data)) return;
+    if (len > (int)sizeof(rq.data)) {
+        static int overflowCount = 0;
+        if (++overflowCount <= 3)
+            qDebug() << "[AUDIO_KERNEL_SEND] OVERFLOW! len=" << len << " > buf=" << sizeof(rq.data);
+        return;
+    }
     memcpy(rq.data, data, len);
-    m_pMediator->sendData((char*)&rq, sizeof(rq), 0);
+    // 变长发送: 只发固定头 + 实际数据, 避免每帧发满 4KB
+    int sendLen = (int)(sizeof(rq) - sizeof(rq.data) + len);
+    if (sendCount <= 3 || sendCount % 100 == 0)
+        TRACE("AUDIO_SEND data #%d sendLen=%d", sendCount, sendLen);
+    m_pMediator->sendData((char*)&rq, sendLen, 0);
 }
 
 //处理会议音频接收
 void Kernel::dealMeetingAudioNotify(char* data, int len, long from) {
-    //qDebug()<<__func__;
     Q_UNUSED(from);
     _STRU_MEETING_AUDIO_RQ* rq = (_STRU_MEETING_AUDIO_RQ*)data;
+    static int recvCount = 0; recvCount++;
+    if (recvCount <= 3 || recvCount % 100 == 0)
+        TRACE("AUDIO_NOTIFY #%d dataLen=%d dlg=%d", recvCount, rq->dataLen, (m_pMeetingDlg!=nullptr));
     if (m_pMeetingDlg && m_pMeetingDlg->getAudioWrite() && rq->dataLen > 0) {
         m_pMeetingDlg->getAudioWrite()->slot_net_rx(rq->data, rq->dataLen);
     }
 }
 
 //发送会议视频
-void Kernel::slot_meetingVideo(const char* data, int len)
+void Kernel::slot_meetingVideo(QByteArray data)
 {
     if (m_currentMeetingId == 0) return;
+    int len = data.size();
     _STRU_MEETING_VIDEO_RQ rq;
     rq.userId = m_myId;
     rq.meetingId = m_currentMeetingId;
@@ -601,7 +611,7 @@ void Kernel::slot_meetingVideo(const char* data, int len)
     if (++sendCount <= 3 || sendCount % 30 == 0)
         fprintf(stderr, "[SEND] video frame #%d dataLen=%d codec=%d\n", sendCount, len, rq.codec);
     if (len > (int)sizeof(rq.data)) return;
-    if (data && len > 0) memcpy(rq.data, data, len);
+    if (len > 0) memcpy(rq.data, data.constData(), len);
     m_pMediator->sendData((char*)&rq, sizeof(rq), 0);
 }
 
@@ -611,10 +621,11 @@ void Kernel::dealMeetingVideoNotify(char* data, int len, long from)
     Q_UNUSED(from);
     _STRU_MEETING_VIDEO_RQ* rq = (_STRU_MEETING_VIDEO_RQ*)data;
     if (!m_pMeetingDlg) return;
-    static int recvCount = 0;
-    if (++recvCount <= 3 || recvCount % 30 == 0)
-        fprintf(stderr, "[RECV] video frame #%d dataLen=%d codec=%d\n", recvCount, rq->dataLen, rq->codec);
+    static int recvCount = 0; recvCount++;
+    if (recvCount <= 3 || recvCount % 30 == 0)
+        TRACE("VIDEO_NOTIFY #%d dataLen=%d codec=%d", recvCount, rq->dataLen, rq->codec);
     if (rq->dataLen == 0) {
+        TRACE("VIDEO_NOTIFY clear frame");
         m_pMeetingDlg->clearRemoteVideo();
     } else if (m_pMeetingDlg->getVideoWrite()) {
         m_pMeetingDlg->getVideoWrite()->slot_recvVideoFrame(rq->data, rq->dataLen);

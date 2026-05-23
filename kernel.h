@@ -94,7 +94,7 @@ public slots:
     void slot_meetingEnd();
     void slot_meetingChat(QString content);
     void slot_meetingAudio(const char* data, int len);
-    void slot_meetingVideo(const char* data, int len);
+    void slot_meetingVideo(QByteArray data);
     void slot_deleteFriend(int friendId);
     void slot_showFriendRequests();
     void slot_acceptFriendRequest(int requestId, int fromId, const QString& fromName);

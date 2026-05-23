@@ -46,3 +46,4 @@ WeMeetServer/WeMeetServer
 WeMeetServer/nohup.out
 WeMeetServer/*.log
 WeMeetServer/*.pro.user*
+.claude/

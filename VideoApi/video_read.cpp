@@ -1,4 +1,5 @@
 #include "video_read.h"
+#include "tracelog.h"
 #include "myfacedetect.h"
 #include <QMessageBox>
 #include <QDebug>
@@ -6,20 +7,28 @@
 #include <QPainter>
 
 Video_Read::Video_Read(QObject *parent) : QObject(parent),
-    m_isFaceDetect(false), m_funnyPic(fp_none), m_frameSkip(0)
+    m_isFaceDetect(false), m_funnyPic(fp_none), m_frameSkip(0),
+    m_frameCount(0), m_pWorkerThread(nullptr)
 {
-    m_pTimer = new QTimer(this);
-    connect(m_pTimer, &QTimer::timeout, this, &Video_Read::slot_getVideoFrame);
-
-    //加载萌拍图片
+    // 加载萌拍图片（主线程安全）
     m_tuer.load(":/images/tuer.png");
     m_hat.load(":/images/hat.png");
 
 #ifdef USE_H264
     m_pH264Encoder = new H264Encoder(IMAGE_WIDTH, IMAGE_HEIGHT, this);
-    connect(m_pH264Encoder, &H264Encoder::sig_encodedPacket,
-            this, &Video_Read::sig_videoFrame);
+    // QByteArray 跨线程安全深拷贝，消除竞态
+    connect(m_pH264Encoder, &H264Encoder::sig_encodedPacket, this,
+            [this](const char* data, int len) {
+        Q_EMIT sig_videoFrame(QByteArray(data, len));
+    });
 #endif
+
+    // 将采集编码全部移到 Worker 线程，主线程仅处理 UI 信号
+    m_pWorkerThread = new QThread(this);
+    m_pWorkerThread->setObjectName("VideoCaptureThread");
+    connect(m_pWorkerThread, &QThread::started, this, &Video_Read::slot_startTimerInThread);
+    this->moveToThread(m_pWorkerThread);
+    m_pWorkerThread->start();
 }
 
 Video_Read::~Video_Read()
@@ -27,13 +36,25 @@ Video_Read::~Video_Read()
     if (m_pTimer) {
         m_pTimer->stop();
     }
+    if (m_pWorkerThread) {
+        m_pWorkerThread->quit();
+        m_pWorkerThread->wait(3000);
+    }
 }
 
-//摄像头采集 → 人脸检测 → 萌拍 → JPEG编码 → 发射信号
+void Video_Read::slot_startTimerInThread()
+{
+    // 在 Worker 线程中创建定时器，确保定时器事件在正确线程触发
+    m_pTimer = new QTimer(this);
+    connect(m_pTimer, &QTimer::timeout, this, &Video_Read::slot_getVideoFrame);
+}
+
+//摄像头采集 → 人脸检测 → 萌拍 → H.264编码 → 发射信号（全部在 Worker 线程）
 void Video_Read::slot_getVideoFrame()
 {
     cv::Mat frame;
     if (!m_cap.read(frame) || frame.empty()) {
+        TRACE("VIDEO_CAP read failed");
         return;
     }
 
@@ -54,7 +75,24 @@ void Video_Read::slot_getVideoFrame()
     // H.264 编码：缩放 BGR 帧 → 编码器 → 发射
     cv::Mat frameScaled;
     cv::resize(frame, frameScaled, cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT));
+    // PTS 时间戳（微秒）
+    if (m_frameCount == 0) {
+        m_elapsed.start();
+    }
+    int64_t pts = m_elapsed.nsecsElapsed() / 1000;  // 纳秒 → 微秒
+    m_pH264Encoder->setPts(pts);
+    m_frameCount++;
     m_pH264Encoder->slot_encode(frameScaled);
+
+    // 本地预览: BGR→RGB→QImage, 绕过 H.264 避免色度丢失
+    cv::Mat frameRGB;
+    cv::cvtColor(frameScaled, frameRGB, cv::COLOR_BGR2RGB);
+    QImage localImg(frameRGB.data, frameRGB.cols, frameRGB.rows,
+                    frameRGB.step, QImage::Format_RGB888);
+    if (m_frameCount <= 3 || m_frameCount % 30 == 0)
+        TRACE("VIDEO_CAP frame=%d thread=%lu", m_frameCount, GetCurrentThreadId());
+    Q_EMIT sig_localPreviewFrame(localImg.copy());
+
 #else
     // BGR → RGB
     cv::Mat frameRGB;
@@ -89,7 +127,7 @@ void Video_Read::slot_getVideoFrame()
     buf.open(QIODevice::WriteOnly);
     image.save(&buf, "JPG", 40);
     // 发射 JPEG 数据
-    Q_EMIT sig_videoFrame(ba.data(), ba.size());
+    Q_EMIT sig_videoFrame(ba);
 #endif
 }
 
@@ -97,18 +135,18 @@ void Video_Read::slot_openVideo()
 {
     m_cap.open(0);
     if (!m_cap.isOpened()) {
-        QMessageBox::information(NULL, tr("提示"), tr("视频没有打开"));
-        m_pTimer->stop();
+        qWarning() << "[Video_Read] 摄像头打开失败（Worker 线程）";
+        if (m_pTimer) m_pTimer->stop();
         return;
     }
     //初始化人脸检测（加载级联文件）
     MyFaceDetect::FaceDetectInit();
-    m_pTimer->start(1000 / FRAME_RATE - 10);
+    if (m_pTimer) m_pTimer->start(1000 / FRAME_RATE - 10);
 }
 
 void Video_Read::slot_closeVideo()
 {
-    m_pTimer->stop();
+    if (m_pTimer) m_pTimer->stop();
     if (m_cap.isOpened()) {
         m_cap.release();
     }

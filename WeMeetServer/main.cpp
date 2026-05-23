@@ -1,10 +1,12 @@
 #include"common.h"
 #include"./Kernel/Kernel.h"
+#include <signal.h>
 
 using namespace std;
 
 int main()
 {
+    signal(SIGPIPE, SIG_IGN);
     setvbuf(stdout, NULL, _IONBF, 0);
     srand(time(NULL));
     Kernel* m_pKernel = Kernel::getInstance();

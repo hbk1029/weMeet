@@ -23,7 +23,7 @@
 #define _DEF_VERSION_LOW            (2)
 #define _DEF_VERSION_HIGH           (2)
 //服务器IP
-#define _DEF_SERVER_IP              ("192.168.74.135")
+#define _DEF_SERVER_IP              ("192.168.74.136")
 //服务器端口号
 #define _DEF_SERVER_PORT            (8080)
 //TCP协议监听队列的最大长度
@@ -333,7 +333,7 @@ typedef struct _STRU_MEETING_AUDIO_RQ {
     int userId;
     int meetingId;
     int dataLen;
-    char data[200];
+    char data[4096];  // Opus 编码帧最大约 1275B，4096 留足安全余量
     _STRU_MEETING_AUDIO_RQ() : type(_DEF_MEETING_AUDIO_RQ), userId(0),
                                meetingId(0), dataLen(0) {
         memset(data, 0, sizeof(data));
@@ -349,6 +349,28 @@ typedef struct _STRU_MEETING_AUDIO_RQ {
 
 // --- 好友状态推送协议 ---
 #define _DEF_FRIEND_STATUS_NOTIFY    (_DEF_PROTOCOL_BASE + 26)
+
+// 视频数据包
+#define _DEF_PACK_VIDEO              (_DEF_PROTOCOL_BASE + 28)
+
+typedef struct _STRU_VIDEO_PACKET {
+    packType type;    // _DEF_PACK_VIDEO
+    int id;      // userId
+    int width;   // 视频宽度
+    int height;  // 视频高度
+    int pts;     // 时间戳（微秒）
+    int len;     // 数据长度
+    char buf[];  // 柔性数组，视频编码数据
+
+    void init() {
+        type = _DEF_PACK_VIDEO;
+        id = 1;
+        width = 320;
+        height = 240;
+        pts = 0;
+        len = 0;
+    }
+}_STRU_VIDEO_PACKET;
 
 typedef struct _STRU_MEETING_VIDEO_RQ {
     packType type;

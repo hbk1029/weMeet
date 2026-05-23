@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QImage>
 #include <QTimer>
+#include <QThread>
+#include <QElapsedTimer>
 #include <vector>
 #include "common.h"
 #include "h264_encoder.h"
@@ -23,7 +25,8 @@ public:
     ~Video_Read();
 
 signals:
-    void sig_videoFrame(const char* data, int len);
+    void sig_videoFrame(QByteArray data);  // QByteArray 跨线程安全深拷贝
+    void sig_localPreviewFrame(QImage img);  // 本地预览，绕过 H.264 色度丢失
 
 public slots:
     void slot_getVideoFrame();  // 定时采集 → 人脸检测 → 萌拍 → 编码 → 发射信号
@@ -35,14 +38,20 @@ public slots:
     //萌拍类型 0=无 1=兔耳朵 2=帽子
     void slot_setFunnyPic(int type);
 
+private slots:
+    void slot_startTimerInThread();  // 在 Worker 线程中启动定时器
+
 private:
     QTimer *m_pTimer;
+    QThread* m_pWorkerThread;
     cv::VideoCapture m_cap;
 
     //人脸检测 & 萌拍
     bool m_isFaceDetect;
     int m_funnyPic;
     int m_frameSkip; // 跳帧计数，每5帧检测一次
+    QElapsedTimer m_elapsed; // 高精度计时器
+    int m_frameCount;      // 已编码帧数
     QImage m_tuer;
     QImage m_hat;
     std::vector<cv::Rect> m_vecLastFace;

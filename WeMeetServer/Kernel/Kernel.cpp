@@ -594,8 +594,7 @@ int Kernel::generateMeetingCode() {
         code = 100000000 + rand() % 900000000;
         memset(sql, 0, sizeof(sql));
         sprintf(sql, "select id from t_meeting where meeting_code = %d;", code);
-        list<string> lstStr;
-    lstStr.clear();
+        lstStr.clear();
         if (!m_sql.SelectMysql(sql, 1, lstStr)) {
             continue;
         }
@@ -609,23 +608,16 @@ void Kernel::broadcastToMeeting(int meetingCode, char* data, int len, int exclud
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         if (m_mapMeetingMembers.count(meetingCode) == 0) return;
-        std::cout << "BROADCAST meeting=" << meetingCode << " members=[";
         for (int userId : m_mapMeetingMembers[meetingCode]) {
-            std::cout << userId;
             if (m_mapIdToSockfd.count(userId) > 0) {
                 int fd = m_mapIdToSockfd[userId];
-                std::cout << "(fd=" << fd << ")";
                 if (fd != excludeSockfd) {
-                    auto r = targetFds.insert(fd);
-                    if (!r.second) std::cout << "!DUP!";
+                    targetFds.insert(fd);
                 }
             }
-            std::cout << " ";
         }
-        std::cout << "] count=" << targetFds.size() << std::endl;
     }
     for (int fd : targetFds) {
-        std::cout << "SEND fd=" << fd << std::endl;
         m_pMediator->sendData(data, len, fd);
     }
 }
@@ -845,13 +837,11 @@ void Kernel::dealMeetingChatRq(char* data, int len, int sockfd) {
 }
 
 void Kernel::dealMeetingAudioRq(char* data, int len, int sockfd) {
-    cout << __func__ << endl;
     _STRU_MEETING_AUDIO_RQ* rq = (_STRU_MEETING_AUDIO_RQ*)data;
     broadcastToMeeting(rq->meetingId, data, len, sockfd);
 }
 
 void Kernel::dealMeetingVideoRq(char* data, int len, int sockfd) {
-    cout << __func__ << endl;
     _STRU_MEETING_VIDEO_RQ* rq = (_STRU_MEETING_VIDEO_RQ*)data;
     //cout << "video meetingId=" << rq->meetingId << " map_has=" << (m_mapMeetingMembers.count(rq->meetingId) ? "yes" : "no") << " count=" << (m_mapMeetingMembers.count(rq->meetingId) ? (int)m_mapMeetingMembers[rq->meetingId].size() : 0) << endl;
     broadcastToMeeting(rq->meetingId, data, len, sockfd);

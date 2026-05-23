@@ -1,5 +1,6 @@
 #include "video_write.h"
 #include <QDebug>
+#include <QDateTime>
 #include <cstdio>
 
 Video_Write::Video_Write(QWidget *parent) : QWidget(parent)
@@ -107,6 +108,11 @@ void Video_Write::slot_recvVideoFrame(const char* data, int len, int codec)
         if (ret < 0) {
             return;
         }
+        // 非阻塞帧率控制：距上一帧不足 20ms 则跳过本条
+        static qint64 lastFrameTime = 0;
+        qint64 now = QDateTime::currentMSecsSinceEpoch();
+        if (lastFrameTime != 0 && now - lastFrameTime < 20) return;
+        lastFrameTime = now;
         fprintf(stderr, "[VDEC] decoded frame #%d %dx%d\n", ++vDecodeCount,
                 m_pDecFrame->width, m_pDecFrame->height);
 

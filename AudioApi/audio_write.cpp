@@ -23,8 +23,8 @@ Audio_Write::Audio_Write(QObject *parent) : QObject(parent)
 #ifdef USE_OPUS
     m_pOpusDecoder = new OpusDecoder(this);
     connect(m_pOpusDecoder, &OpusDecoder::sig_decodedData, this,
-            [this](const char* pcmData, int len) {
-        myBuffer_out->write(pcmData, len);
+            [this](QByteArray pcm) {
+        myBuffer_out->write(pcm.constData(), pcm.size());
     });
 #else
     speex_bits_init(&bits_dec);

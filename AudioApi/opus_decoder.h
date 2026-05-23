@@ -15,7 +15,7 @@ public:
     ~OpusDecoder();
 
 signals:
-    void sig_decodedData(const char* data, int len);
+    void sig_decodedData(QByteArray pcm);
 
 public slots:
     void slot_decode(const unsigned char* data, int len);
